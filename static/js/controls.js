@@ -281,13 +281,36 @@ class InputManager {
     let padStartX = 0;
     let padStartY = 0;
     let padTouchStart = 0;
+    let scrollVelocityY = 0;
+    let inertiaRaf = null;
+
+    const stopInertia = () => {
+      if (inertiaRaf) {
+        cancelAnimationFrame(inertiaRaf);
+        inertiaRaf = null;
+      }
+    };
+
+    const runInertia = () => {
+      if (Math.abs(scrollVelocityY) > 0.04) {
+        this.send({ type: "wheel", deltaY: scrollVelocityY });
+        scrollVelocityY *= 0.89; // Deceleration friction factor
+        inertiaRaf = requestAnimationFrame(runInertia);
+      } else {
+        stopInertia();
+      }
+    };
 
     pad.addEventListener("touchstart", (e) => {
       e.preventDefault();
+      stopInertia();
+      scrollVelocityY = 0;
       if (e.touches.length === 1) {
         padStartX = e.touches[0].clientX;
         padStartY = e.touches[0].clientY;
         padTouchStart = performance.now();
+      } else if (e.touches.length === 2) {
+        padStartY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
       }
     }, { passive: false });
 
@@ -304,11 +327,13 @@ class InputManager {
 
         this.send({ type: "mouse_move", x: this.touchStartX, y: this.touchStartY });
       } else if (e.touches.length === 2) {
-        // Trackpad 2-finger scroll
-        const dy = e.touches[0].clientY - padStartY;
-        padStartY = e.touches[0].clientY;
-        if (Math.abs(dy) > 2) {
-          this.send({ type: "wheel", deltaY: dy * 0.05 });
+        // Trackpad 2-finger scroll with velocity tracking
+        const currentMidY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+        const dy = currentMidY - padStartY;
+        padStartY = currentMidY;
+        scrollVelocityY = dy * 0.08;
+        if (Math.abs(dy) > 1) {
+          this.send({ type: "wheel", deltaY: scrollVelocityY });
         }
       }
     }, { passive: false });
@@ -316,10 +341,16 @@ class InputManager {
     pad.addEventListener("touchend", (e) => {
       e.preventDefault();
       const elapsed = performance.now() - padTouchStart;
-      if (e.touches.length === 0 && elapsed < 220) {
-        this.vibrate(12);
-        this.send({ type: "click", x: this.touchStartX, y: this.touchStartY, button: "left" });
+      if (e.touches.length === 0) {
+        if (Math.abs(scrollVelocityY) > 0.08) {
+          runInertia();
+        }
+        if (elapsed < 220) {
+          this.vibrate(12);
+          this.send({ type: "click", x: this.touchStartX, y: this.touchStartY, button: "left" });
+        }
       }
     }, { passive: false });
   }
 }
+

@@ -59,12 +59,13 @@ class SystemTrayManager:
         def _run():
             image = create_tray_icon()
             menu = pystray.Menu(
-                pystray.MenuItem("🖥️ Open Control Center", self._open_dashboard, default=True),
-                pystray.MenuItem("📋 Copy Client Link", self._copy_link),
-                pystray.MenuItem("🪟 Windows Display Settings", self._toggle_display_mode),
+                pystray.MenuItem("Open Control Center", self._open_dashboard, default=True),
+                pystray.MenuItem("Copy Client Link", self._copy_link),
+                pystray.MenuItem("Windows Display Settings", self._toggle_display_mode),
                 pystray.Menu.SEPARATOR,
-                pystray.MenuItem("❌ Exit AirScreen", self._quit),
+                pystray.MenuItem("Exit AirScreen", self._quit),
             )
+
             self.icon = pystray.Icon("AirScreen", image, "AirScreen Wireless Display", menu)
             logger.info("[Tray] System tray icon registered")
             self.icon.run()

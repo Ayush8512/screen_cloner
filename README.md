@@ -4,31 +4,31 @@ AirScreen is an end-to-end, commercial-grade software suite designed to clone an
 
 ---
 
-## 🚀 Key Features
+## Key Architecture & Capabilities
 
-### 🖥️ 1. AirScreen Host (Windows Desktop Control Center)
+### 1. AirScreen Host (Workstation Control Center)
 - **Native Desktop GUI**: Powered by `pywebview` using the Windows Edge WebView2 engine — no black command prompts needed.
-- **Windows System Tray Daemon**: Runs silently in the background near the Windows clock (`pystray`). Right-click menu for opening control center, copying connection links, and toggling display modes.
+- **Windows System Tray Daemon**: Runs silently in the background near the Windows clock (`pystray`). Clean menu for opening control center, copying connection links, and toggling display modes.
 - **High-Res QR Code & Wi-Fi Selector**: Automatic IP resolution with dropdown switcher for Wi-Fi, Ethernet, and Mobile Hotspot interfaces.
 - **1-Click Virtual Display Driver (VDD)**: Easily install, enable, or remove genuine secondary Windows monitors (Display 2) for real drag-and-drop multitasking.
 - **Live Monitor Thumbnail Previews**: Real-time visual thumbnails of Monitor 1 and Monitor 2 with one-click broadcast switching.
 - **Connected Devices Monitor**: View connected client devices (iPad, iPhone, Android, Laptop), live ping latency, and disconnect rogue devices with one click.
 
-### 📱 2. AirScreen Client (Installable PWA App)
+### 2. AirScreen Client (Standalone PWA Receiver)
 - **1-Tap PWA Installation**: Installs directly onto Android, iPadOS/iOS home screens as a standalone native app (100% fullscreen, zero browser address bars).
 - **Floating Action Pill**: Draggable, auto-dimming translucent HUD displaying live FPS, latency, and monitor status.
 - **Slide-Up Multi-Tool Drawer**:
   - **Display Tab**: Monitor switcher (Display 1 / Display 2), 540p / 720p / 1080p quality presets, screen fit mode (Letterbox / Stretch to fill), fullscreen toggle, and virtual keyboard trigger.
-  - **Virtual Trackpad Tab**: Dedicated touchpad surface with Left-Click, Right-Click, and Middle-Click buttons, tactile scroll bar, and sensitivity adjustment slider.
+  - **Virtual Trackpad Tab**: Dedicated touchpad surface with Left-Click, Right-Click, and Middle-Click buttons, tactile scroll bar, kinetic inertia momentum, and sensitivity adjustment slider.
   - **Windows Shortcuts Tab**: Instant access to `Win` (Start), `Win + D` (Show Desktop), `Alt + Tab` (App Switcher), `Ctrl + Shift + Esc` (Task Manager), `Win + P` (Project Display), `Ctrl + C / V / Z / A`, Arrow keys, and editing keys.
   - **Media Tab**: Windows volume control (`Vol +`, `Vol -`, `Mute`) and playback controls (`Prev`, `Play/Pause`, `Next`).
-  - **Gesture Help Tab**: Quick reference card for touch gestures.
+  - **Gesture Help Tab**: Quick reference card for touch gestures with minimalist SVG diagrams.
 - **Pinch-to-Zoom & Pan**: Multi-touch zoom up to 3.5x to read tiny code or spreadsheet text on mobile screens, with drag panning and a "Reset 1:1" button.
 - **Screen Wake Lock & Haptics**: Keeps the mobile screen awake while streaming, with subtle vibration feedback on button presses.
 
 ---
 
-## 🏗️ Architecture
+## System Architecture
 
 ```
 wireless_display/
@@ -54,7 +54,7 @@ wireless_display/
 │   ├── index.html                    # Mobile/Tablet touch receiver client
 │   ├── dashboard.html                # Host desktop control center dashboard
 │   ├── css/
-│   │   ├── main.css                  # Mobile client glassmorphic stylesheet
+│   │   ├── main.css                  # Mobile client obsidian stylesheet
 │   │   └── dashboard.css             # Host control center dark zinc stylesheet
 │   └── js/
 │       ├── connection.js             # WebSocket client & telemetry ping
@@ -71,7 +71,7 @@ wireless_display/
 
 ---
 
-## ⚡ Quick Start
+## Quick Start
 
 ### Option 1: 1-Click Desktop Launcher
 Double-click **`launch_airscreen.bat`** to start AirScreen immediately with the modern Desktop Control Center and System Tray icon.

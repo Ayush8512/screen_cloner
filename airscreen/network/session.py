@@ -46,7 +46,11 @@ class ClientSessionManager:
                 "device": info.get("device"),
                 "connected_seconds": int(now - info.get("connected_at", now)),
                 "ping_ms": info.get("ping_ms", "--"),
+                "frames_sent": info.get("frames_sent", 0),
+                "frames_dropped": info.get("frames_dropped", 0),
+                "last_frame_kb": info.get("last_frame_kb", 0),
             })
+
         return clients
 
     async def disconnect_client(self, client_id: str) -> bool:
@@ -130,27 +134,46 @@ class ClientSessionManager:
         client_ready.set()
         last_sent_frame_id = -1
         is_streaming = True
+        total_frames_sent = 0
+        total_frames_dropped = 0
 
         async def stream_worker():
-            nonlocal last_sent_frame_id, is_streaming
+            nonlocal last_sent_frame_id, is_streaming, total_frames_sent, total_frames_dropped
             while is_streaming:
                 try:
-                    # Wait for client acknowledgment or 35ms timeout to prevent stream freezing
+                    # Wait for client acknowledgment with 200ms timeout for lost packets
                     try:
-                        await asyncio.wait_for(client_ready.wait(), timeout=0.035)
+                        await asyncio.wait_for(client_ready.wait(), timeout=0.200)
                     except asyncio.TimeoutError:
-                        pass
+                        # Client ACK lost or delayed; reset ready gate to prevent deadlock
+                        client_ready.set()
+                        await asyncio.sleep(0.01)
+                        continue
+
                     client_ready.clear()
 
                     current_frame_id = self.capture_engine.frame_id
                     if current_frame_id == last_sent_frame_id:
-                        await asyncio.sleep(0.005)
+                        # No new screen change; pause briefly
+                        await asyncio.sleep(0.004)
                         client_ready.set()
                         continue
+
+                    # Calculate dropped frames if capture advanced faster than client consumption
+                    if last_sent_frame_id != -1 and current_frame_id > last_sent_frame_id + 1:
+                        dropped = current_frame_id - last_sent_frame_id - 1
+                        total_frames_dropped += dropped
+                        if websocket in self._sessions:
+                            self._sessions[websocket]["frames_dropped"] = total_frames_dropped
 
                     frame_bytes = self.capture_engine.latest_frame
                     if frame_bytes:
                         last_sent_frame_id = current_frame_id
+                        total_frames_sent += 1
+                        if websocket in self._sessions:
+                            self._sessions[websocket]["frames_sent"] = total_frames_sent
+                            self._sessions[websocket]["last_frame_kb"] = round(len(frame_bytes) / 1024, 1)
+
                         success = await safe_send_bytes(frame_bytes)
                         if not success:
                             break
@@ -163,6 +186,7 @@ class ClientSessionManager:
                 except Exception as exc:
                     logger.debug(f"[Stream] Worker terminated: {exc}")
                     break
+
 
         sender_task = asyncio.create_task(stream_worker())
 

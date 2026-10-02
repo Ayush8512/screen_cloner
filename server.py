@@ -459,12 +459,12 @@ def print_banner(ip: str, port: int):
         pass
 
     print("\n" + "=" * 60)
-    print("      🚀 AIRSCREEN - WIRELESS SECOND DISPLAY SERVER 🚀")
+    print("      AIRSCREEN - WIRELESS SECOND DISPLAY SERVER")
     print("=" * 60)
-    print(f"\n📡 Connect your Phone / Tablet to the SAME Wi-Fi network.")
-    print(f"📱 Open your mobile browser and go to:")
-    print(f"\n   👉 \033[1;32m{url}\033[0m 👈\n")
-    print("📷 Or scan this QR Code with your phone camera:")
+    print(f"\n[NETWORK] Connect your Phone / Tablet to the SAME Wi-Fi network.")
+    print(f"[CLIENT]  Open your mobile browser and go to:")
+    print(f"\n   -> \033[1;32m{url}\033[0m\n")
+    print("[-] Or scan this QR Code with your phone camera:")
     print("-" * 60)
     try:
         qr = qrcode.QRCode(border=1)
@@ -473,13 +473,14 @@ def print_banner(ip: str, port: int):
     except Exception:
         pass
     print("-" * 60)
-    print("✨ Features:")
-    print("  • Extended Display & Multi-Monitor Support")
-    print("  • Ultra-low latency GPU capture (DXGI / Direct3D)")
-    print("  • Touch-to-click & Trackpad mode for PC mouse control")
-    print("  • Wireless keyboard typing from phone")
-    print("  • Fullscreen borderless display mode")
+    print("[INFO] Features:")
+    print("  - Extended Display & Multi-Monitor Support")
+    print("  - Ultra-low latency GPU capture (DXGI / Direct3D)")
+    print("  - Touch-to-click & Trackpad mode for PC mouse control")
+    print("  - Wireless keyboard typing from phone")
+    print("  - Fullscreen borderless display mode")
     print("=" * 60 + "\n")
+
 
 
 if __name__ == "__main__":

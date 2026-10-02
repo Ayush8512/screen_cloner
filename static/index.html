@@ -5,15 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#090d16">
-  <title>AirScreen | Wireless Display</title>
+  <meta name="theme-color" content="#08090d">
+  <title>AirScreen Receiver</title>
 
   <!-- PWA Manifest & Icons -->
   <link rel="manifest" href="/static/manifest.json">
   <link rel="icon" type="image/svg+xml" href="/static/icon.svg">
   <link rel="apple-touch-icon" href="/static/icon.svg">
 
-  <link rel="stylesheet" href="/static/css/main.css?v=3.0">
+  <link rel="stylesheet" href="/static/css/main.css?v=4.0">
 </head>
 <body>
 
@@ -21,7 +21,7 @@
   <div id="splash">
     <div class="spinner"></div>
     <div class="splash-title">AIRSCREEN</div>
-    <div class="splash-subtitle" id="status-text">CONNECTING TO WIRELESS DISPLAY...</div>
+    <div class="splash-subtitle" id="status-text">INITIALIZING HARDWARE DECODER...</div>
   </div>
 
   <!-- PWA Install Banner -->
@@ -29,8 +29,8 @@
     <div class="pwa-info">
       <img src="/static/icon.svg" class="pwa-icon" alt="App Icon">
       <div>
-        <div class="pwa-title">Install AirScreen App</div>
-        <div class="pwa-desc">Full-screen immersive display without browser bars</div>
+        <div class="pwa-title">Install Standalone Receiver</div>
+        <div class="pwa-desc">Full 1:1 hardware viewport without browser chrome</div>
       </div>
     </div>
     <div class="pwa-actions">
@@ -59,7 +59,7 @@
       <span class="pill-badge" id="monitor-badge">Display 1</span>
     </div>
     <button class="pill-toggle-btn" id="open-drawer-btn" title="Open Controls & Tools">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+      <svg viewBox="0 0 24 24"><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
     </button>
   </div>
 
@@ -69,31 +69,33 @@
     <div class="drawer-drag-indicator" id="drawer-drag-bar"></div>
 
     <div class="drawer-header">
-      <div class="drawer-title">AirScreen Controls</div>
-      <button class="drawer-close-btn" id="drawer-close-btn">✕</button>
+      <div class="drawer-title">Receiver Controls</div>
+      <button class="drawer-close-btn" id="drawer-close-btn" title="Close Panel">
+        <svg viewBox="0 0 24 24" class="btn-icon"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
 
     <!-- Navigation Tabs -->
     <div class="drawer-tabs">
       <button class="tab-btn active" data-tab="tab-display">
         <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-        Display
+        <span>Display</span>
       </button>
       <button class="tab-btn" data-tab="tab-trackpad">
         <svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="3"/><line x1="4" y1="14" x2="20" y2="14"/><line x1="12" y1="14" x2="12" y2="22"/></svg>
-        Trackpad
+        <span>Trackpad</span>
       </button>
       <button class="tab-btn" data-tab="tab-shortcuts">
         <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6" y2="8"/><line x1="10" y1="8" x2="10" y2="8"/><line x1="14" y1="8" x2="14" y2="8"/><line x1="18" y1="8" x2="18" y2="8"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="8" y1="16" x2="16" y2="16"/></svg>
-        Shortcuts
+        <span>Shortcuts</span>
       </button>
       <button class="tab-btn" data-tab="tab-media">
         <svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
-        Media
+        <span>Media</span>
       </button>
       <button class="tab-btn" data-tab="tab-gestures">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        Help
+        <span>Help</span>
       </button>
     </div>
 
@@ -102,17 +104,17 @@
 
       <!-- TAB 1: Display & Stream -->
       <div class="tab-pane active" id="tab-display">
-        <div class="section-label">Active Monitor</div>
+        <div class="section-label">Target Monitor</div>
         <div class="monitor-card-grid" id="monitor-selector-grid">
           <button class="card-btn active" id="btn-mon-1" onclick="switchMonitor(1)">
-            <div class="card-icon">🖥️</div>
+            <svg viewBox="0 0 24 24" class="card-svg"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
             <div class="card-text">
               <div class="card-title">Display 1</div>
               <div class="card-sub">Primary Monitor</div>
             </div>
           </button>
           <button class="card-btn" id="btn-mon-2" onclick="switchMonitor(2)">
-            <div class="card-icon">📺</div>
+            <svg viewBox="0 0 24 24" class="card-svg"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><circle cx="17" cy="8" r="2"/></svg>
             <div class="card-text">
               <div class="card-title">Display 2</div>
               <div class="card-sub">Extended Virtual Screen</div>
@@ -120,27 +122,27 @@
           </button>
         </div>
 
-        <div class="section-label">Streaming Quality Preset</div>
+        <div class="section-label">Quality Profile</div>
         <div class="pill-group">
-          <button class="pill-btn" data-quality="540p" onclick="setQualityPreset('540p')">540p (Smooth / Battery)</button>
-          <button class="pill-btn active" data-quality="720p" onclick="setQualityPreset('720p')">720p (HD Balanced)</button>
-          <button class="pill-btn" data-quality="1080p" onclick="setQualityPreset('1080p')">1080p (Ultra Crisp)</button>
+          <button class="pill-btn" data-quality="540p" onclick="setQualityPreset('540p')">540p &bull; High FPS</button>
+          <button class="pill-btn active" data-quality="720p" onclick="setQualityPreset('720p')">720p &bull; Balanced</button>
+          <button class="pill-btn" data-quality="1080p" onclick="setQualityPreset('1080p')">1080p &bull; Ultra</button>
         </div>
 
-        <div class="section-label">Screen Fit & Aspect Ratio</div>
+        <div class="section-label">Viewport Geometry</div>
         <div class="pill-group">
-          <button class="pill-btn active" id="fit-contain-btn" onclick="setFitMode('contain')">Letterbox (Contain)</button>
-          <button class="pill-btn" id="fit-fill-btn" onclick="setFitMode('fill')">Stretch to Fill</button>
+          <button class="pill-btn active" id="fit-contain-btn" onclick="setFitMode('contain')">Letterbox (Native Ratio)</button>
+          <button class="pill-btn" id="fit-fill-btn" onclick="setFitMode('fill')">Stretch to Fullscreen</button>
         </div>
 
         <div class="grid-2col mt-3">
           <button class="btn btn-secondary" id="fullscreen-btn">
-            <svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
-            Fullscreen Mode
+            <svg viewBox="0 0 24 24" class="btn-icon"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+            <span>Fullscreen Mode</span>
           </button>
           <button class="btn btn-secondary" id="kbd-trigger-btn">
-            <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="8" y1="16" x2="16" y2="16"/></svg>
-            Virtual Keyboard
+            <svg viewBox="0 0 24 24" class="btn-icon"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="8" y1="16" x2="16" y2="16"/></svg>
+            <span>Soft Keyboard</span>
           </button>
         </div>
       </div>
@@ -148,53 +150,53 @@
       <!-- TAB 2: Virtual Trackpad -->
       <div class="tab-pane" id="tab-trackpad">
         <div class="trackpad-box" id="virtual-trackpad">
-          <div class="trackpad-hint">Touchpad Surface & Gestures</div>
+          <div class="trackpad-hint">Touchpad Precision Surface</div>
           <div class="trackpad-crosshair"></div>
         </div>
 
         <!-- Dedicated Mouse Buttons -->
         <div class="mouse-buttons-row">
           <button class="mouse-btn mouse-btn-main" id="btn-left-click">
-            <span>Left Click</span>
+            <span>Primary Click</span>
           </button>
           <button class="mouse-btn" id="btn-mid-click">
             <span>Middle</span>
           </button>
           <button class="mouse-btn mouse-btn-main" id="btn-right-click">
-            <span>Right Click</span>
+            <span>Secondary</span>
           </button>
         </div>
 
         <div class="slider-row">
-          <span class="slider-label">Trackpad Speed</span>
+          <span class="slider-label">Tracking Speed</span>
           <input type="range" id="sensitivity-slider" min="0.5" max="3.0" step="0.1" value="1.5">
           <span id="sensitivity-val" class="slider-val">1.5x</span>
         </div>
       </div>
 
-      <!-- TAB 3: Windows Power Shortcuts -->
+      <!-- TAB 3: Windows Shortcuts -->
       <div class="tab-pane" id="tab-shortcuts">
-        <div class="section-label">Windows System Hotkeys</div>
+        <div class="section-label">System Shortcuts</div>
         <div class="shortcuts-grid">
           <button class="key-card" onclick="sendHotkey(['Win'])">
             <span class="key-badge">Win</span>
-            <span>Start Menu</span>
+            <span>Start</span>
           </button>
           <button class="key-card" onclick="sendHotkey(['Win', 'd'])">
             <span class="key-badge">Win + D</span>
-            <span>Show Desktop</span>
+            <span>Desktop</span>
           </button>
           <button class="key-card" onclick="sendHotkey(['Alt', 'Tab'])">
             <span class="key-badge">Alt + Tab</span>
-            <span>Switch Apps</span>
+            <span>Switcher</span>
           </button>
           <button class="key-card" onclick="sendHotkey(['Ctrl', 'Shift', 'Escape'])">
-            <span class="key-badge">Ctrl+Shift+Esc</span>
-            <span>Task Manager</span>
+            <span class="key-badge">Taskmgr</span>
+            <span>Processes</span>
           </button>
           <button class="key-card" onclick="sendHotkey(['Win', 'p'])">
             <span class="key-badge">Win + P</span>
-            <span>Project Screen</span>
+            <span>Project</span>
           </button>
           <button class="key-card" onclick="sendHotkey(['Ctrl', 'c'])">
             <span class="key-badge">Ctrl + C</span>
@@ -214,7 +216,7 @@
           </button>
         </div>
 
-        <div class="section-label mt-3">Quick Navigation Keys</div>
+        <div class="section-label mt-3">Navigation Row</div>
         <div class="nav-keys-row">
           <button class="key-btn" onclick="sendKey('Escape')">ESC</button>
           <button class="key-btn" onclick="sendKey('Tab')">TAB</button>
@@ -224,36 +226,53 @@
 
         <div class="arrow-pad">
           <div></div>
-          <button class="arrow-btn" onclick="sendKey('ArrowUp')">▲</button>
+          <button class="arrow-btn" onclick="sendKey('ArrowUp')">
+            <svg viewBox="0 0 24 24" class="btn-icon"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+          </button>
           <div></div>
-          <button class="arrow-btn" onclick="sendKey('ArrowLeft')">◀</button>
-          <button class="arrow-btn" onclick="sendKey('ArrowDown')">▼</button>
-          <button class="arrow-btn" onclick="sendKey('ArrowRight')">▶</button>
+          <button class="arrow-btn" onclick="sendKey('ArrowLeft')">
+            <svg viewBox="0 0 24 24" class="btn-icon"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          </button>
+          <button class="arrow-btn" onclick="sendKey('ArrowDown')">
+            <svg viewBox="0 0 24 24" class="btn-icon"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+          </button>
+          <button class="arrow-btn" onclick="sendKey('ArrowRight')">
+            <svg viewBox="0 0 24 24" class="btn-icon"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
         </div>
       </div>
 
       <!-- TAB 4: Media & Audio Controls -->
       <div class="tab-pane" id="tab-media">
-        <div class="section-label">Windows Media & Audio Controls</div>
+        <div class="section-label">Workstation Audio Level</div>
         <div class="media-controls-grid">
           <button class="media-btn" onclick="sendKey('VolumeDown')">
-            <svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="15.54" y1="8.46" x2="15.54" y2="15.54"/></svg>
+            <svg viewBox="0 0 24 24" class="btn-icon"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="15.54" y1="8.46" x2="15.54" y2="15.54"/></svg>
             <span>Volume -</span>
           </button>
           <button class="media-btn" onclick="sendKey('VolumeMute')">
-            <svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+            <svg viewBox="0 0 24 24" class="btn-icon"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
             <span>Mute</span>
           </button>
           <button class="media-btn" onclick="sendKey('VolumeUp')">
-            <svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+            <svg viewBox="0 0 24 24" class="btn-icon"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
             <span>Volume +</span>
           </button>
         </div>
 
         <div class="media-playback-row mt-3">
-          <button class="playback-btn" onclick="sendKey('MediaPrev')">⏮ Prev</button>
-          <button class="playback-btn playback-btn-primary" onclick="sendKey('MediaPlayPause')">⏯ Play / Pause</button>
-          <button class="playback-btn" onclick="sendKey('MediaNext')">⏭ Next</button>
+          <button class="playback-btn" onclick="sendKey('MediaPrev')">
+            <svg viewBox="0 0 24 24" class="btn-icon"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>
+            <span>Previous</span>
+          </button>
+          <button class="playback-btn playback-btn-primary" onclick="sendKey('MediaPlayPause')">
+            <svg viewBox="0 0 24 24" class="btn-icon"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <span>Play / Pause</span>
+          </button>
+          <button class="playback-btn" onclick="sendKey('MediaNext')">
+            <svg viewBox="0 0 24 24" class="btn-icon"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+            <span>Next</span>
+          </button>
         </div>
       </div>
 
@@ -261,38 +280,39 @@
       <div class="tab-pane" id="tab-gestures">
         <div class="guide-cards">
           <div class="guide-card">
-            <div class="guide-icon">👆</div>
+            <div class="guide-vector-icon">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="9" stroke-dasharray="2 2"/></svg>
+            </div>
             <div class="guide-info">
-              <div class="guide-title">Single Tap</div>
-              <div class="guide-desc">Performs a standard Windows Left Click at cursor.</div>
+              <div class="guide-title">Single Contact Tap</div>
+              <div class="guide-desc">Dispatches primary Win32 mouse click at relative position.</div>
             </div>
           </div>
           <div class="guide-card">
-            <div class="guide-icon">✌️</div>
+            <div class="guide-vector-icon">
+              <svg viewBox="0 0 24 24"><circle cx="8" cy="12" r="3"/><circle cx="16" cy="12" r="3"/></svg>
+            </div>
             <div class="guide-info">
-              <div class="guide-title">Two-Finger Tap</div>
-              <div class="guide-desc">Triggers Windows Right Click (Context Menu).</div>
+              <div class="guide-title">Two Contact Tap</div>
+              <div class="guide-desc">Dispatches secondary context menu click (Right Click).</div>
             </div>
           </div>
           <div class="guide-card">
-            <div class="guide-icon">📜</div>
+            <div class="guide-vector-icon">
+              <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="8 9 12 5 16 9"/><polyline points="8 15 12 19 16 15"/></svg>
+            </div>
             <div class="guide-info">
-              <div class="guide-title">Two-Finger Drag</div>
-              <div class="guide-desc">Smooth vertical and horizontal page scrolling.</div>
+              <div class="guide-title">Two Contact Drag</div>
+              <div class="guide-desc">Hardware mouse wheel event with smooth delta momentum.</div>
             </div>
           </div>
           <div class="guide-card">
-            <div class="guide-icon">🤏</div>
-            <div class="guide-info">
-              <div class="guide-title">Pinch to Zoom</div>
-              <div class="guide-desc">Zoom in up to 3x on code or text, then drag to pan.</div>
+            <div class="guide-vector-icon">
+              <svg viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
             </div>
-          </div>
-          <div class="guide-card">
-            <div class="guide-icon">⏱️</div>
             <div class="guide-info">
-              <div class="guide-title">Tap & Hold</div>
-              <div class="guide-desc">Holds mouse down for dragging windows or selections.</div>
+              <div class="guide-title">Pinch Scaling</div>
+              <div class="guide-desc">Multi-touch zoom up to 3.5x with pan translation.</div>
             </div>
           </div>
         </div>
@@ -305,10 +325,10 @@
   <input type="text" id="hidden-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
 
   <!-- Modular Scripts -->
-  <script src="/static/js/connection.js?v=3.0"></script>
-  <script src="/static/js/renderer.js?v=3.0"></script>
-  <script src="/static/js/controls.js?v=3.0"></script>
-  <script src="/static/js/app.js?v=3.0"></script>
+  <script src="/static/js/connection.js?v=4.0"></script>
+  <script src="/static/js/renderer.js?v=4.0"></script>
+  <script src="/static/js/controls.js?v=4.0"></script>
+  <script src="/static/js/app.js?v=4.0"></script>
 
   <!-- PWA Service Worker Registration -->
   <script>

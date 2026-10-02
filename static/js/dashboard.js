@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const connectionUrl = document.getElementById("connection-url");
   const qrImg = document.getElementById("qr-img");
   const copyUrlBtn = document.getElementById("copy-url-btn");
+  const copyBtnText = document.getElementById("copy-btn-text");
   const openClientTabBtn = document.getElementById("open-client-tab-btn");
 
   const driverStatusBadge = document.getElementById("driver-status-badge");
@@ -41,7 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
         data.interfaces.forEach((iface, idx) => {
           const opt = document.createElement("option");
           opt.value = iface.ip;
-          opt.textContent = `${iface.label} - ${iface.ip}`;
+          opt.textContent = `${iface.label} [${iface.ip}]`;
           if (idx === 0) {
             opt.selected = true;
             selectedIp = iface.ip;
@@ -54,10 +55,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Update Driver status badge
       if (data.driver_active) {
-        driverStatusBadge.textContent = "Driver Active & Running";
+        driverStatusBadge.textContent = "Driver Registered & Active";
         driverStatusBadge.className = "badge badge-success";
       } else {
-        driverStatusBadge.textContent = "Driver Inactive / Removed";
+        driverStatusBadge.textContent = "Driver Not Installed";
         driverStatusBadge.className = "badge badge-warning";
       }
 
@@ -89,8 +90,10 @@ document.addEventListener("DOMContentLoaded", () => {
   copyUrlBtn.addEventListener("click", () => {
     const url = connectionUrl.textContent;
     navigator.clipboard.writeText(url).then(() => {
-      copyUrlBtn.textContent = "✓ Copied!";
-      setTimeout(() => (copyUrlBtn.textContent = "📋 Copy"), 2000);
+      if (copyBtnText) copyBtnText.textContent = "Copied";
+      setTimeout(() => {
+        if (copyBtnText) copyBtnText.textContent = "Copy URL";
+      }, 2000);
     });
   });
 
@@ -101,14 +104,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Render Monitor Cards
   function renderMonitors(monitors, activeId) {
-    monitorCountLabel.textContent = `${monitors.length} Monitor${monitors.length > 1 ? "s" : ""} Detected`;
+    monitorCountLabel.textContent = `${monitors.length} Display${monitors.length > 1 ? "s" : ""} Online`;
     monitorsPreviewContainer.innerHTML = "";
 
     monitors.forEach((mon) => {
       const isCurrentActive = mon.id === activeId;
       const card = document.createElement("div");
       card.className = `monitor-preview-card ${isCurrentActive ? "active" : ""}`;
-      card.title = isCurrentActive ? "Currently Broadcasting" : "Click to Broadcast This Screen";
+      card.title = isCurrentActive ? "Currently streaming" : "Click to broadcast this display";
 
       card.innerHTML = `
         <div class="monitor-thumb-frame">
@@ -117,10 +120,10 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="monitor-info">
           <div>
             <div class="mon-name">${mon.name}</div>
-            <div class="mon-res">${mon.width} x ${mon.height} ${mon.is_primary ? "(Main)" : "(Extended)"}</div>
+            <div class="mon-res">${mon.width}x${mon.height} ${mon.is_primary ? "[Primary]" : "[Extended]"}</div>
           </div>
           <span class="badge ${isCurrentActive ? "badge-accent" : "badge-secondary"}">
-            ${isCurrentActive ? "● Active Stream" : "Switch"}
+            ${isCurrentActive ? "Active Feed" : "Select"}
           </span>
         </div>
       `;
@@ -136,15 +139,15 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Render Connected Devices List
+  // Render Connected Devices List (with clean SVG icons, no emojis)
   function renderClients(clients) {
     clientCountBadge.textContent = `${clients.length} Device${clients.length !== 1 ? "s" : ""}`;
 
     if (clients.length === 0) {
       clientsListContainer.innerHTML = `
         <div class="empty-state">
-          <span class="empty-icon">📱</span>
-          <span>No devices currently connected. Scan the QR code to connect.</span>
+          <svg viewBox="0 0 24 24" class="empty-icon-svg"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+          <span>No remote endpoints connected. Stream is idling.</span>
         </div>
       `;
       return;
@@ -155,16 +158,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const row = document.createElement("div");
       row.className = "client-row";
 
-      let icon = "📱";
-      if (client.device.includes("Tablet") || client.device.includes("iPad")) icon = "📟";
-      else if (client.device.includes("Windows") || client.device.includes("Mac")) icon = "💻";
-
       row.innerHTML = `
         <div class="client-details">
-          <span class="client-icon">${icon}</span>
+          <svg viewBox="0 0 24 24" class="client-icon-svg"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
           <div>
             <div class="client-title">${client.device}</div>
-            <div class="client-meta">${client.ip} • Ping: ${client.ping_ms} ms • Connected: ${client.connected_seconds}s ago</div>
+            <div class="client-meta">${client.ip} &bull; RTT ${client.ping_ms} ms &bull; Active ${client.connected_seconds}s</div>
           </div>
         </div>
         <button class="btn btn-sm btn-secondary" onclick="disconnectDevice('${client.id}')">Disconnect</button>

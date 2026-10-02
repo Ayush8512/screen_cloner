@@ -3,29 +3,36 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AirScreen Host Control Center</title>
+  <title>AirScreen | Host Control Center</title>
   <link rel="icon" type="image/svg+xml" href="/static/icon.svg">
-  <link rel="stylesheet" href="/static/css/dashboard.css?v=3.0">
+  <link rel="stylesheet" href="/static/css/dashboard.css?v=4.0">
 </head>
 <body>
 
   <!-- Top Navigation Header -->
   <header class="navbar">
     <div class="brand">
-      <img src="/static/icon.svg" class="logo" alt="AirScreen Logo">
+      <div class="logo-box">
+        <svg viewBox="0 0 24 24" class="logo-svg">
+          <rect x="2" y="3" width="20" height="14" rx="2" stroke="currentColor" stroke-width="2" fill="none"/>
+          <line x1="8" y1="21" x2="16" y2="21" stroke="currentColor" stroke-width="2"/>
+          <line x1="12" y1="17" x2="12" y2="21" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </div>
       <div class="brand-text">
         <span class="brand-name">AirScreen</span>
-        <span class="brand-tag">Host Control Center</span>
+        <span class="brand-tag">Workstation Host Engine</span>
       </div>
     </div>
 
     <div class="header-status">
       <div class="status-indicator">
         <span class="dot live-pulse"></span>
-        <span id="server-status-label">Server Live</span>
+        <span id="server-status-label">Engine Running</span>
       </div>
-      <button class="btn btn-sm btn-ghost" id="open-client-tab-btn" title="Open Web Receiver in browser">
-        ↗ Open Client
+      <button class="btn btn-sm btn-ghost" id="open-client-tab-btn" title="Open receiver view in browser">
+        <svg viewBox="0 0 24 24" class="btn-icon"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        <span>Open Receiver</span>
       </button>
     </div>
   </header>
@@ -35,33 +42,39 @@
     <!-- LEFT COLUMN: Connection & Pairing -->
     <section class="card connection-card">
       <div class="card-header">
-        <h2 class="card-title">Connect Mobile Device</h2>
-        <span class="badge badge-accent">Scan & Go</span>
+        <div class="header-with-icon">
+          <svg viewBox="0 0 24 24" class="panel-icon"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
+          <h2 class="card-title">Pairing & Network</h2>
+        </div>
+        <span class="badge badge-accent">Direct Link</span>
       </div>
-      <p class="card-desc">Scan with your phone or tablet camera to instantly clone or extend your screen.</p>
+      <p class="card-desc">Scan via tablet or mobile camera to mirror or extend displays with zero cable tethering.</p>
 
       <!-- Network Interface Selector -->
       <div class="form-group">
-        <label for="iface-select" class="form-label">Network Interface / IP:</label>
-        <select id="iface-select" class="form-select"></select>
+        <label for="iface-select" class="form-label">Active Network Interface</label>
+        <div class="select-wrapper">
+          <select id="iface-select" class="form-select"></select>
+        </div>
       </div>
 
       <!-- QR Code Display Box -->
       <div class="qr-container">
         <div class="qr-box">
-          <img id="qr-img" src="/static/qr.png" alt="Connection QR Code">
+          <img id="qr-img" src="/static/qr.png" alt="Direct Connection QR Code">
         </div>
         <div class="connection-url-box">
           <span class="url-text" id="connection-url">http://127.0.0.1:8000</span>
           <button class="btn btn-sm btn-primary" id="copy-url-btn">
-            📋 Copy
+            <svg viewBox="0 0 24 24" class="btn-icon"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            <span id="copy-btn-text">Copy URL</span>
           </button>
         </div>
       </div>
 
       <div class="tips-box">
-        <span class="tip-icon">💡</span>
-        <span class="tip-text">Both PC and Phone must be connected to the same Wi-Fi or Hotspot network.</span>
+        <svg viewBox="0 0 24 24" class="tip-icon-svg"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <span class="tip-text">Ensure host workstation and remote devices reside on the same Wi-Fi subnet or local hotspot.</span>
       </div>
     </section>
 
@@ -71,20 +84,26 @@
       <!-- Virtual Display Driver Studio -->
       <section class="card vdd-card">
         <div class="card-header">
-          <h2 class="card-title">Virtual Display Driver (VDD)</h2>
-          <span id="driver-status-badge" class="badge badge-warning">Checking...</span>
+          <div class="header-with-icon">
+            <svg viewBox="0 0 24 24" class="panel-icon"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><circle cx="17" cy="8" r="2"/></svg>
+            <h2 class="card-title">Virtual Display Driver (VDD)</h2>
+          </div>
+          <span id="driver-status-badge" class="badge badge-warning">Probing...</span>
         </div>
-        <p class="card-desc">Create genuine secondary monitors in Windows for real multi-tasking and extended desktop workflows.</p>
+        <p class="card-desc">Instantiates Microsoft IddCx virtual monitor nodes for genuine multi-display window layouts.</p>
 
         <div class="vdd-actions">
           <button class="btn btn-secondary" id="btn-driver-install">
-            <span>⚙️ Install Driver</span>
+            <svg viewBox="0 0 24 24" class="btn-icon"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <span>Register Driver</span>
           </button>
           <button class="btn btn-secondary" id="btn-driver-remove">
-            <span>🗑️ Remove Driver</span>
+            <svg viewBox="0 0 24 24" class="btn-icon"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+            <span>Unregister Driver</span>
           </button>
           <button class="btn btn-accent" id="btn-driver-settings">
-            <span>🪟 Windows Display Settings (Win+P)</span>
+            <svg viewBox="0 0 24 24" class="btn-icon"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            <span>Windows Display Topology (Win+P)</span>
           </button>
         </div>
       </section>
@@ -92,8 +111,11 @@
       <!-- Monitor Previews & Switcher -->
       <section class="card monitors-card">
         <div class="card-header">
-          <h2 class="card-title">Available Monitors</h2>
-          <span class="card-sub-info" id="monitor-count-label">1 Monitor Detected</span>
+          <div class="header-with-icon">
+            <svg viewBox="0 0 24 24" class="panel-icon"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            <h2 class="card-title">Capture Feeds</h2>
+          </div>
+          <span class="card-sub-info" id="monitor-count-label">Scanning displays...</span>
         </div>
 
         <div class="monitors-grid" id="monitors-preview-container">
@@ -104,14 +126,17 @@
       <!-- Connected Clients Monitor -->
       <section class="card clients-card">
         <div class="card-header">
-          <h2 class="card-title">Connected Devices</h2>
+          <div class="header-with-icon">
+            <svg viewBox="0 0 24 24" class="panel-icon"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+            <h2 class="card-title">Active Receiver Sessions</h2>
+          </div>
           <span class="badge" id="client-count-badge">0 Devices</span>
         </div>
 
         <div class="clients-list" id="clients-list-container">
           <div class="empty-state">
-            <span class="empty-icon">📱</span>
-            <span>No devices currently connected. Scan the QR code to start.</span>
+            <svg viewBox="0 0 24 24" class="empty-icon-svg"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+            <span>No remote endpoints connected. Stream is idling.</span>
           </div>
         </div>
       </section>
@@ -120,6 +145,6 @@
 
   </main>
 
-  <script src="/static/js/dashboard.js?v=3.0"></script>
+  <script src="/static/js/dashboard.js?v=4.0"></script>
 </body>
 </html>
