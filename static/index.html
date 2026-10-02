@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>AirScreen | Wireless Display</title>
+  <link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body>
+
+  <!-- Loading Splash -->
+  <div id="splash">
+    <div class="spinner"></div>
+    <div class="splash-title">AIRSCREEN</div>
+    <div class="splash-subtitle" id="status-text">INITIALIZING DISPLAY STREAM</div>
+  </div>
+
+  <!-- Telemetry HUD -->
+  <div class="hud" id="hud">
+    <div class="status-dot" id="status-dot"></div>
+    <span class="hud-title">AIRSCREEN</span>
+    <span class="badge badge-accent" id="monitor-badge" style="display: none;">Display 1</span>
+    <span class="badge" id="fps-badge">0 FPS</span>
+    <span class="badge" id="ping-badge">-- ms</span>
+    <span class="badge" id="status-label">Connecting</span>
+  </div>
+
+  <!-- Display Canvas -->
+  <div id="display-container">
+    <canvas id="screen-canvas"></canvas>
+  </div>
+
+  <!-- Floating Minimalist Dock -->
+  <div class="dock" id="dock">
+    <!-- Monitor Switcher -->
+    <button class="btn" id="monitor-btn" style="display: none;" title="Switch Active Display">
+      <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      <span id="monitor-label">Display 1</span>
+    </button>
+
+    <!-- Touch / Trackpad Mode -->
+    <button class="btn active" id="mode-btn" title="Toggle Direct Touch or Trackpad Mode">
+      <svg viewBox="0 0 24 24"><path d="M12 2a4 4 0 0 0-4 4v6.2A3 3 0 0 0 7 15a4 4 0 0 0 8 0 3 3 0 0 0-1-2.8V6a4 4 0 0 0-4-4z"/><line x1="12" y1="6" x2="12" y2="10"/></svg>
+      <span id="mode-label">Direct Touch</span>
+    </button>
+
+    <!-- Quality Preset Switcher -->
+    <button class="btn" id="quality-btn" title="Change Resolution / Compression Preset">
+      <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      <span id="quality-label">720p</span>
+    </button>
+
+    <!-- Virtual Keyboard Trigger -->
+    <button class="btn" id="kbd-btn" title="Open Mobile Keyboard">
+      <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6" y2="8"/><line x1="10" y1="8" x2="10" y2="8"/><line x1="14" y1="8" x2="14" y2="8"/><line x1="18" y1="8" x2="18" y2="8"/><line x1="6" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="18" y2="12"/><line x1="8" y1="16" x2="16" y2="16"/></svg>
+      <span>Keyboard</span>
+    </button>
+
+    <!-- Quick Control Keys -->
+    <div class="key-group">
+      <button class="key-btn" onclick="sendKey('Backspace')">DEL</button>
+      <button class="key-btn" onclick="sendKey('Enter')">RET</button>
+      <button class="key-btn" onclick="sendKey('Escape')">ESC</button>
+    </div>
+
+    <!-- Screen Fit / Aspect Ratio Toggle -->
+    <button class="btn" id="fit-btn" title="Toggle Aspect Ratio (Contain / Stretch to Fill)">
+      <svg viewBox="0 0 24 24"><path d="M15 3h6v6m0 6v6h-6M9 21H3v-6m0-6V3h6"/></svg>
+      <span id="fit-label">Fill</span>
+    </button>
+
+    <!-- Fullscreen Toggle -->
+    <button class="btn" id="fullscreen-btn" title="Toggle Fullscreen">
+      <svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+      <span>Full</span>
+    </button>
+  </div>
+
+  <!-- HUD Visibility Toggle Button -->
+  <button id="hud-toggle" title="Toggle UI Controls">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+  </button>
+
+  <!-- Hidden text input for triggering mobile virtual keyboard -->
+  <input type="text" id="hidden-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+
+  <!-- Modular Scripts with cache-busting -->
+  <script src="/static/js/connection.js?v=2.3"></script>
+  <script src="/static/js/renderer.js?v=2.3"></script>
+  <script src="/static/js/controls.js?v=2.3"></script>
+  <script src="/static/js/app.js?v=2.3"></script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+"""Network discovery, local IP resolution, and terminal banner generation."""
+
+import os
+import socket
+import sys
+from typing import Optional
+
+import psutil
+import qrcode
+
+
+class NetworkDiscovery:
+    """Detects active network interfaces, IP addresses, and available ports."""
+
+    @staticmethod
+    def get_local_wifi_ip() -> str:
+        wifi_ip: Optional[str] = None
+        lan_ip: Optional[str] = None
+
+        try:
+            interfaces = psutil.net_if_addrs()
+            for iface_name, addrs in interfaces.items():
+                for addr in addrs:
+                    if addr.family == socket.AF_INET and not addr.address.startswith("127."):
+                        # Skip APIPA auto-assigned link-local addresses
+                        if addr.address.startswith("169.254."):
+                            continue
+
+                        name_lower = iface_name.lower()
+                        if any(w in name_lower for w in ["wi-fi", "wlan", "wireless"]):
+                            wifi_ip = addr.address
+                        elif not lan_ip and not any(v in name_lower for v in ["virtual", "vethernet", "hyper-v", "wsl"]):
+                            lan_ip = addr.address
+        except Exception:
+            pass
+
+        return wifi_ip or lan_ip or "127.0.0.1"
+
+    @staticmethod
+    def find_open_port(preferred_port: int = 8000, max_attempts: int = 25) -> int:
+        for offset in range(max_attempts):
+            test_port = preferred_port + offset
+            try:
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                    s.bind(("0.0.0.0", test_port))
+                    return test_port
+            except OSError:
+                continue
+        return preferred_port
+
+    @staticmethod
+    def print_startup_banner(ip: str, port: int, static_dir: str):
+        url = f"http://{ip}:{port}"
+        
+        # Save a clean QR code PNG for the static web client
+        try:
+            qr = qrcode.make(url)
+            qr_file = os.path.join(static_dir, "qr.png")
+            qr.save(qr_file)
+        except Exception:
+            pass
+
+        separator = "=" * 64
+        print("\n" + separator)
+        print("  AIRSCREEN :: WIRELESS SECOND DISPLAY SERVER")
+        print("  Version: 2.0.0  |  Architecture: Modular Win32 / DXGI")
+        print(separator)
+        print(f"\n[NETWORK] Server listening on interface: {ip}:{port}")
+        print(f"[CLIENT]  Open mobile browser and connect to:")
+        print(f"          -> {url}\n")
+        print("[-] Quick Scan QR Code:")
+        print("-" * 64)
+        try:
+            qr_terminal = qrcode.QRCode(border=1)
+            qr_terminal.add_data(url)
+            qr_terminal.print_ascii(invert=True)
+        except Exception:
+            pass
+        print("-" * 64)
+        print("[STATUS] Press Ctrl+C in this console to terminate.")
+        print(separator + "\n")

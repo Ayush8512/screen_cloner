@@ -1,0 +1,15 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Temporary screenshots / capture test images
+current_screen_dxgi.jpg
+current_screen_mss.jpg
+
+# OS / Editor files
+.vscode/
+.idea/
+*.log
+Thumbs.db
+Desktop.ini
