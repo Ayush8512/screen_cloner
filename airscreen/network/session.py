@@ -4,7 +4,9 @@ import asyncio
 import json
 import logging
 import traceback
-from typing import Dict, List, Set
+from typing import Dict, List, Set, Optional
+import time
+import uuid
 
 from fastapi import WebSocket, WebSocketDisconnect
 
@@ -30,10 +32,64 @@ class ClientSessionManager:
         self.display_manager = display_manager
         self.encoder = encoder
         self._active_connections: Set[WebSocket] = set()
+        self._sessions: Dict[WebSocket, dict] = {}
+        self._lock = asyncio.Lock()
+
+    def get_connected_clients(self) -> List[dict]:
+        """Returns snapshot list of connected clients and their telemetry."""
+        now = time.time()
+        clients = []
+        for ws, info in list(self._sessions.items()):
+            clients.append({
+                "id": info.get("id"),
+                "ip": info.get("ip"),
+                "device": info.get("device"),
+                "connected_seconds": int(now - info.get("connected_at", now)),
+                "ping_ms": info.get("ping_ms", "--"),
+            })
+        return clients
+
+    async def disconnect_client(self, client_id: str) -> bool:
+        """Forcefully closes connection with a specific client ID."""
+        for ws, info in list(self._sessions.items()):
+            if info.get("id") == client_id:
+                try:
+                    await ws.close()
+                except Exception:
+                    pass
+                return True
+        return False
 
     async def handle_client(self, websocket: WebSocket):
         await websocket.accept()
         self._active_connections.add(websocket)
+
+        # Detect device type from User-Agent
+        ua = websocket.headers.get("user-agent", "")
+        device = "Web Browser"
+        if "iPad" in ua:
+            device = "iPad (Tablet)"
+        elif "iPhone" in ua:
+            device = "iPhone"
+        elif "Android" in ua:
+            device = "Android Tablet" if "Tablet" in ua else "Android Phone"
+        elif "Windows" in ua:
+            device = "Windows Device"
+        elif "Macintosh" in ua:
+            device = "Mac"
+        elif "Linux" in ua:
+            device = "Linux Device"
+
+        client_id = f"dev_{uuid.uuid4().hex[:6]}"
+        client_ip = websocket.client.host if websocket.client else "Unknown IP"
+
+        self._sessions[websocket] = {
+            "id": client_id,
+            "ip": client_ip,
+            "device": device,
+            "connected_at": time.time(),
+            "ping_ms": "--",
+        }
 
         # Mutex lock to serialize writes to this WebSocket (prevents concurrency crashes)
         ws_lock = asyncio.Lock()
@@ -68,6 +124,7 @@ class ClientSessionManager:
                 "quality": self.encoder.quality,
             })
         )
+
 
         client_ready = asyncio.Event()
         client_ready.set()
@@ -122,9 +179,19 @@ class ClientSessionManager:
                     client_ready.set()
 
                 elif msg_type == MessageType.PING.value:
+                    req_t = msg.get("t")
+                    if req_t and websocket in self._sessions:
+                        calc_ping = int(time.time() * 1000) - int(req_t)
+                        if 0 <= calc_ping < 5000:
+                            self._sessions[websocket]["ping_ms"] = calc_ping
                     await safe_send_text(
-                        json.dumps({"type": MessageType.PONG.value, "t": msg.get("t")})
+                        json.dumps({"type": MessageType.PONG.value, "t": req_t})
                     )
+
+                elif msg_type == MessageType.HOTKEY.value:
+                    combo = msg.get("combo", [])
+                    if isinstance(combo, list):
+                        InputInjector.send_hotkey(combo)
 
                 elif msg_type == MessageType.SELECT_MONITOR.value:
                     requested_id = int(msg.get("idx", 1))
@@ -193,4 +260,6 @@ class ClientSessionManager:
             is_streaming = False
             sender_task.cancel()
             self._active_connections.discard(websocket)
-            logger.info("[Session] Client connection closed")
+            self._sessions.pop(websocket, None)
+            logger.info(f"[Session] Client {client_id} disconnected")
+

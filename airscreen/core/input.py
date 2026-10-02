@@ -63,21 +63,61 @@ class INPUT(ctypes.Structure):
     ]
 
 VKEY_MAP: Dict[str, int] = {
+    # System & Editing
     "Backspace": 0x08,
     "Tab": 0x09,
     "Enter": 0x0D,
+    "Return": 0x0D,
     "Escape": 0x1B,
+    "Esc": 0x1B,
     "Space": 0x20,
+    "PageUp": 0x21,
+    "PageDown": 0x22,
+    "End": 0x23,
+    "Home": 0x24,
     "ArrowLeft": 0x25,
     "ArrowUp": 0x26,
     "ArrowRight": 0x27,
     "ArrowDown": 0x28,
+    "PrintScreen": 0x2C,
+    "Snapshot": 0x2C,
+    "Insert": 0x2D,
     "Delete": 0x2E,
-    "Home": 0x24,
-    "End": 0x23,
-    "PageUp": 0x21,
-    "PageDown": 0x22,
+    "Del": 0x2E,
+
+    # Modifiers
+    "Shift": 0x10,
+    "Control": 0x11,
+    "Ctrl": 0x11,
+    "Alt": 0x12,
+    "Menu": 0x12,
+    "Win": 0x5B,
+    "Windows": 0x5B,
+    "Meta": 0x5B,
+    "Super": 0x5B,
+
+    # Volume & Media
+    "VolumeMute": 0xAD,
+    "VolumeDown": 0xAE,
+    "VolumeUp": 0xAF,
+    "MediaNext": 0xB0,
+    "MediaPrev": 0xB1,
+    "MediaPlayPause": 0xB3,
+    "PlayPause": 0xB3,
 }
+
+# Add alphanumeric keys dynamically
+for code in range(ord('0'), ord('9') + 1):
+    VKEY_MAP[chr(code)] = code
+
+for code in range(ord('A'), ord('Z') + 1):
+    VKEY_MAP[chr(code)] = code
+    VKEY_MAP[chr(code).lower()] = code
+
+# Add Function keys F1-F12
+for i in range(1, 13):
+    VKEY_MAP[f"F{i}"] = 0x6F + i
+    VKEY_MAP[f"f{i}"] = 0x6F + i
 
 
 class InputInjector:
@@ -140,3 +180,34 @@ class InputInjector:
         inp_up.union.ki = KEYBDINPUT(wVk=vk, wScan=0, dwFlags=KEYEVENTF_KEYUP, time=0, dwExtraInfo=None)
         events = (INPUT * 2)(inp_down, inp_up)
         user32.SendInput(2, events, ctypes.sizeof(INPUT))
+
+    @staticmethod
+    def send_hotkey(keys: list):
+        """Presses multiple keys down in sequence, then releases in reverse order."""
+        if not keys:
+            return
+        vks = []
+        for k in keys:
+            vk = VKEY_MAP.get(k) or VKEY_MAP.get(str(k).capitalize())
+            if vk:
+                vks.append(vk)
+
+        if not vks:
+            return
+
+        # Press down in order
+        for vk in vks:
+            inp = INPUT(type=1)
+            inp.union.ki = KEYBDINPUT(wVk=vk, wScan=0, dwFlags=0, time=0, dwExtraInfo=None)
+            user32.SendInput(1, ctypes.byref(inp), ctypes.sizeof(INPUT))
+            time.sleep(0.01)
+
+        time.sleep(0.02)
+
+        # Release in reverse order
+        for vk in reversed(vks):
+            inp = INPUT(type=1)
+            inp.union.ki = KEYBDINPUT(wVk=vk, wScan=0, dwFlags=KEYEVENTF_KEYUP, time=0, dwExtraInfo=None)
+            user32.SendInput(1, ctypes.byref(inp), ctypes.sizeof(INPUT))
+            time.sleep(0.005)
+

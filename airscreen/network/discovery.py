@@ -13,28 +13,45 @@ class NetworkDiscovery:
     """Detects active network interfaces, IP addresses, and available ports."""
 
     @staticmethod
-    def get_local_wifi_ip() -> str:
-        wifi_ip: Optional[str] = None
-        lan_ip: Optional[str] = None
-
+    def get_all_network_interfaces() -> list:
+        """Returns list of all active IPv4 network interfaces."""
+        results = []
         try:
             interfaces = psutil.net_if_addrs()
             for iface_name, addrs in interfaces.items():
                 for addr in addrs:
                     if addr.family == socket.AF_INET and not addr.address.startswith("127."):
-                        # Skip APIPA auto-assigned link-local addresses
                         if addr.address.startswith("169.254."):
                             continue
-
                         name_lower = iface_name.lower()
+                        label = iface_name
                         if any(w in name_lower for w in ["wi-fi", "wlan", "wireless"]):
-                            wifi_ip = addr.address
-                        elif not lan_ip and not any(v in name_lower for v in ["virtual", "vethernet", "hyper-v", "wsl"]):
-                            lan_ip = addr.address
+                            label = f"Wi-Fi ({iface_name})"
+                        elif any(e in name_lower for e in ["ethernet", "lan", "eth"]):
+                            label = f"Ethernet ({iface_name})"
+                        elif "hotspot" in name_lower:
+                            label = f"Mobile Hotspot ({iface_name})"
+                        
+                        results.append({
+                            "name": iface_name,
+                            "label": label,
+                            "ip": addr.address,
+                            "is_wifi": any(w in name_lower for w in ["wi-fi", "wlan", "wireless"]),
+                        })
         except Exception:
             pass
 
-        return wifi_ip or lan_ip or "127.0.0.1"
+        # Sort so Wi-Fi comes first
+        results.sort(key=lambda x: not x["is_wifi"])
+        return results
+
+    @staticmethod
+    def get_local_wifi_ip() -> str:
+        all_ifaces = NetworkDiscovery.get_all_network_interfaces()
+        if all_ifaces:
+            return all_ifaces[0]["ip"]
+        return "127.0.0.1"
+
 
     @staticmethod
     def find_open_port(preferred_port: int = 8000, max_attempts: int = 25) -> int:

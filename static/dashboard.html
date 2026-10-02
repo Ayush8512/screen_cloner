@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AirScreen Host Control Center</title>
+  <link rel="icon" type="image/svg+xml" href="/static/icon.svg">
+  <link rel="stylesheet" href="/static/css/dashboard.css?v=3.0">
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header class="navbar">
+    <div class="brand">
+      <img src="/static/icon.svg" class="logo" alt="AirScreen Logo">
+      <div class="brand-text">
+        <span class="brand-name">AirScreen</span>
+        <span class="brand-tag">Host Control Center</span>
+      </div>
+    </div>
+
+    <div class="header-status">
+      <div class="status-indicator">
+        <span class="dot live-pulse"></span>
+        <span id="server-status-label">Server Live</span>
+      </div>
+      <button class="btn btn-sm btn-ghost" id="open-client-tab-btn" title="Open Web Receiver in browser">
+        ↗ Open Client
+      </button>
+    </div>
+  </header>
+
+  <main class="dashboard-grid">
+
+    <!-- LEFT COLUMN: Connection & Pairing -->
+    <section class="card connection-card">
+      <div class="card-header">
+        <h2 class="card-title">Connect Mobile Device</h2>
+        <span class="badge badge-accent">Scan & Go</span>
+      </div>
+      <p class="card-desc">Scan with your phone or tablet camera to instantly clone or extend your screen.</p>
+
+      <!-- Network Interface Selector -->
+      <div class="form-group">
+        <label for="iface-select" class="form-label">Network Interface / IP:</label>
+        <select id="iface-select" class="form-select"></select>
+      </div>
+
+      <!-- QR Code Display Box -->
+      <div class="qr-container">
+        <div class="qr-box">
+          <img id="qr-img" src="/static/qr.png" alt="Connection QR Code">
+        </div>
+        <div class="connection-url-box">
+          <span class="url-text" id="connection-url">http://127.0.0.1:8000</span>
+          <button class="btn btn-sm btn-primary" id="copy-url-btn">
+            📋 Copy
+          </button>
+        </div>
+      </div>
+
+      <div class="tips-box">
+        <span class="tip-icon">💡</span>
+        <span class="tip-text">Both PC and Phone must be connected to the same Wi-Fi or Hotspot network.</span>
+      </div>
+    </section>
+
+    <!-- RIGHT COLUMN: Monitors & Virtual Display Driver -->
+    <div class="right-stack">
+
+      <!-- Virtual Display Driver Studio -->
+      <section class="card vdd-card">
+        <div class="card-header">
+          <h2 class="card-title">Virtual Display Driver (VDD)</h2>
+          <span id="driver-status-badge" class="badge badge-warning">Checking...</span>
+        </div>
+        <p class="card-desc">Create genuine secondary monitors in Windows for real multi-tasking and extended desktop workflows.</p>
+
+        <div class="vdd-actions">
+          <button class="btn btn-secondary" id="btn-driver-install">
+            <span>⚙️ Install Driver</span>
+          </button>
+          <button class="btn btn-secondary" id="btn-driver-remove">
+            <span>🗑️ Remove Driver</span>
+          </button>
+          <button class="btn btn-accent" id="btn-driver-settings">
+            <span>🪟 Windows Display Settings (Win+P)</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Monitor Previews & Switcher -->
+      <section class="card monitors-card">
+        <div class="card-header">
+          <h2 class="card-title">Available Monitors</h2>
+          <span class="card-sub-info" id="monitor-count-label">1 Monitor Detected</span>
+        </div>
+
+        <div class="monitors-grid" id="monitors-preview-container">
+          <!-- Dynamically populated monitor cards -->
+        </div>
+      </section>
+
+      <!-- Connected Clients Monitor -->
+      <section class="card clients-card">
+        <div class="card-header">
+          <h2 class="card-title">Connected Devices</h2>
+          <span class="badge" id="client-count-badge">0 Devices</span>
+        </div>
+
+        <div class="clients-list" id="clients-list-container">
+          <div class="empty-state">
+            <span class="empty-icon">📱</span>
+            <span>No devices currently connected. Scan the QR code to start.</span>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+  </main>
+
+  <script src="/static/js/dashboard.js?v=3.0"></script>
+</body>
+</html>

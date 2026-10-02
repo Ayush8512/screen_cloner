@@ -4,12 +4,16 @@ import argparse
 import logging
 import os
 import sys
+import threading
+import time
 
 import uvicorn
 
 from airscreen.config import AppConfig
 from airscreen.network.discovery import NetworkDiscovery
 from airscreen.app import create_app
+from airscreen.gui.window import HostWindow
+from airscreen.gui.tray import SystemTrayManager
 
 # Configure structured monochromatic logging
 logging.basicConfig(
@@ -28,13 +32,14 @@ except Exception:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="AirScreen - Ultra-Low Latency Wireless Display Server"
+        description="AirScreen - Ultra-Low Latency Wireless Display Server & Control Center"
     )
     parser.add_argument("--host", type=str, default="0.0.0.0", help="Binding host IP")
     parser.add_argument("--port", "-p", type=int, default=8000, help="Initial target port")
     parser.add_argument("--fps", type=int, default=45, help="Capture frame rate cap (default: 45)")
     parser.add_argument("--quality", "-q", type=int, default=65, help="JPEG quality 25-95 (default: 65)")
     parser.add_argument("--scale", "-s", type=float, default=0.75, help="Resolution scale factor (default: 0.75)")
+    parser.add_argument("--headless", "--no-gui", action="store_true", help="Run without native desktop GUI")
     return parser.parse_args()
 
 
@@ -60,16 +65,49 @@ def main():
     # Print clean monochromatic startup banner
     NetworkDiscovery.print_startup_banner(wifi_ip, port, static_dir)
 
-    # Initialize and start server
+    # Initialize server application
     app = create_app(config=config, static_dir=static_dir)
-    uvicorn.run(
-        app,
-        host=config.host,
-        port=config.port,
-        ws_ping_interval=None,
-        ws_ping_timeout=None,
-        log_level="warning",
-    )
+
+    if args.headless:
+        # Run server in main thread (headless / console mode)
+        uvicorn.run(
+            app,
+            host=config.host,
+            port=config.port,
+            ws_ping_interval=None,
+            ws_ping_timeout=None,
+            log_level="warning",
+        )
+    else:
+        # Run server in background daemon thread
+        server_config = uvicorn.Config(
+            app,
+            host=config.host,
+            port=config.port,
+            ws_ping_interval=None,
+            ws_ping_timeout=None,
+            log_level="warning",
+        )
+        server = uvicorn.Server(server_config)
+        server_thread = threading.Thread(target=server.run, name="UvicornServerThread", daemon=True)
+        server_thread.start()
+
+        # Allow server 500ms to bind port
+        time.sleep(0.5)
+
+        # Initialize System Tray
+        tray = SystemTrayManager(port=config.port, on_exit=lambda: os._exit(0))
+        tray.run_in_thread()
+
+        # Launch Native Desktop Window
+        try:
+            window = HostWindow(port=config.port)
+            window.start()
+        except KeyboardInterrupt:
+            pass
+        finally:
+            logger.info("[AirScreen] Shutting down...")
+            os._exit(0)
 
 
 if __name__ == "__main__":

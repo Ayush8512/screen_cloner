@@ -22,6 +22,7 @@ class MessageType(str, Enum):
     WHEEL = "wheel"
     TYPE_TEXT = "type_text"
     KEY = "key"
+    HOTKEY = "hotkey"
     SETTINGS = "settings"
 
 

@@ -5,91 +5,318 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#090d16">
   <title>AirScreen | Wireless Display</title>
-  <link rel="stylesheet" href="/static/css/main.css">
+
+  <!-- PWA Manifest & Icons -->
+  <link rel="manifest" href="/static/manifest.json">
+  <link rel="icon" type="image/svg+xml" href="/static/icon.svg">
+  <link rel="apple-touch-icon" href="/static/icon.svg">
+
+  <link rel="stylesheet" href="/static/css/main.css?v=3.0">
 </head>
 <body>
 
-  <!-- Loading Splash -->
+  <!-- Loading Splash Screen -->
   <div id="splash">
     <div class="spinner"></div>
     <div class="splash-title">AIRSCREEN</div>
-    <div class="splash-subtitle" id="status-text">INITIALIZING DISPLAY STREAM</div>
+    <div class="splash-subtitle" id="status-text">CONNECTING TO WIRELESS DISPLAY...</div>
   </div>
 
-  <!-- Telemetry HUD -->
-  <div class="hud" id="hud">
-    <div class="status-dot" id="status-dot"></div>
-    <span class="hud-title">AIRSCREEN</span>
-    <span class="badge badge-accent" id="monitor-badge" style="display: none;">Display 1</span>
-    <span class="badge" id="fps-badge">0 FPS</span>
-    <span class="badge" id="ping-badge">-- ms</span>
-    <span class="badge" id="status-label">Connecting</span>
+  <!-- PWA Install Banner -->
+  <div id="pwa-banner" class="hidden">
+    <div class="pwa-info">
+      <img src="/static/icon.svg" class="pwa-icon" alt="App Icon">
+      <div>
+        <div class="pwa-title">Install AirScreen App</div>
+        <div class="pwa-desc">Full-screen immersive display without browser bars</div>
+      </div>
+    </div>
+    <div class="pwa-actions">
+      <button id="pwa-install-btn" class="btn btn-sm btn-primary">Install</button>
+      <button id="pwa-dismiss-btn" class="btn btn-sm btn-ghost">Dismiss</button>
+    </div>
   </div>
 
-  <!-- Display Canvas -->
+  <!-- Zoom Reset Badge (visible when pinch-zoomed) -->
+  <div id="zoom-badge" class="zoom-badge hidden">
+    <span id="zoom-level">100%</span>
+    <button id="reset-zoom-btn" title="Reset Zoom">Reset 1:1</button>
+  </div>
+
+  <!-- Display Canvas Viewport -->
   <div id="display-container">
     <canvas id="screen-canvas"></canvas>
   </div>
 
-  <!-- Floating Minimalist Dock -->
-  <div class="dock" id="dock">
-    <!-- Monitor Switcher -->
-    <button class="btn" id="monitor-btn" style="display: none;" title="Switch Active Display">
-      <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-      <span id="monitor-label">Display 1</span>
-    </button>
-
-    <!-- Touch / Trackpad Mode -->
-    <button class="btn active" id="mode-btn" title="Toggle Direct Touch or Trackpad Mode">
-      <svg viewBox="0 0 24 24"><path d="M12 2a4 4 0 0 0-4 4v6.2A3 3 0 0 0 7 15a4 4 0 0 0 8 0 3 3 0 0 0-1-2.8V6a4 4 0 0 0-4-4z"/><line x1="12" y1="6" x2="12" y2="10"/></svg>
-      <span id="mode-label">Direct Touch</span>
-    </button>
-
-    <!-- Quality Preset Switcher -->
-    <button class="btn" id="quality-btn" title="Change Resolution / Compression Preset">
-      <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-      <span id="quality-label">720p</span>
-    </button>
-
-    <!-- Virtual Keyboard Trigger -->
-    <button class="btn" id="kbd-btn" title="Open Mobile Keyboard">
-      <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6" y2="8"/><line x1="10" y1="8" x2="10" y2="8"/><line x1="14" y1="8" x2="14" y2="8"/><line x1="18" y1="8" x2="18" y2="8"/><line x1="6" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="18" y2="12"/><line x1="8" y1="16" x2="16" y2="16"/></svg>
-      <span>Keyboard</span>
-    </button>
-
-    <!-- Quick Control Keys -->
-    <div class="key-group">
-      <button class="key-btn" onclick="sendKey('Backspace')">DEL</button>
-      <button class="key-btn" onclick="sendKey('Enter')">RET</button>
-      <button class="key-btn" onclick="sendKey('Escape')">ESC</button>
+  <!-- Floating Action Pill (Minimal, Draggable HUD) -->
+  <div class="action-pill" id="action-pill">
+    <div class="pill-handle" id="pill-drag-handle">
+      <div class="status-dot" id="status-dot"></div>
+      <span class="pill-stat" id="fps-badge">0 FPS</span>
+      <span class="pill-stat" id="ping-badge">-- ms</span>
+      <span class="pill-badge" id="monitor-badge">Display 1</span>
     </div>
-
-    <!-- Screen Fit / Aspect Ratio Toggle -->
-    <button class="btn" id="fit-btn" title="Toggle Aspect Ratio (Contain / Stretch to Fill)">
-      <svg viewBox="0 0 24 24"><path d="M15 3h6v6m0 6v6h-6M9 21H3v-6m0-6V3h6"/></svg>
-      <span id="fit-label">Fill</span>
-    </button>
-
-    <!-- Fullscreen Toggle -->
-    <button class="btn" id="fullscreen-btn" title="Toggle Fullscreen">
-      <svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
-      <span>Full</span>
+    <button class="pill-toggle-btn" id="open-drawer-btn" title="Open Controls & Tools">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
     </button>
   </div>
 
-  <!-- HUD Visibility Toggle Button -->
-  <button id="hud-toggle" title="Toggle UI Controls">
-    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-  </button>
+  <!-- Slide-Up Multi-Tool Drawer -->
+  <div class="drawer-overlay" id="drawer-overlay"></div>
+  <div class="drawer" id="drawer">
+    <div class="drawer-drag-indicator" id="drawer-drag-bar"></div>
+
+    <div class="drawer-header">
+      <div class="drawer-title">AirScreen Controls</div>
+      <button class="drawer-close-btn" id="drawer-close-btn">✕</button>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="drawer-tabs">
+      <button class="tab-btn active" data-tab="tab-display">
+        <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        Display
+      </button>
+      <button class="tab-btn" data-tab="tab-trackpad">
+        <svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="3"/><line x1="4" y1="14" x2="20" y2="14"/><line x1="12" y1="14" x2="12" y2="22"/></svg>
+        Trackpad
+      </button>
+      <button class="tab-btn" data-tab="tab-shortcuts">
+        <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6" y2="8"/><line x1="10" y1="8" x2="10" y2="8"/><line x1="14" y1="8" x2="14" y2="8"/><line x1="18" y1="8" x2="18" y2="8"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="8" y1="16" x2="16" y2="16"/></svg>
+        Shortcuts
+      </button>
+      <button class="tab-btn" data-tab="tab-media">
+        <svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+        Media
+      </button>
+      <button class="tab-btn" data-tab="tab-gestures">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Help
+      </button>
+    </div>
+
+    <!-- Tab Contents -->
+    <div class="tab-content-container">
+
+      <!-- TAB 1: Display & Stream -->
+      <div class="tab-pane active" id="tab-display">
+        <div class="section-label">Active Monitor</div>
+        <div class="monitor-card-grid" id="monitor-selector-grid">
+          <button class="card-btn active" id="btn-mon-1" onclick="switchMonitor(1)">
+            <div class="card-icon">🖥️</div>
+            <div class="card-text">
+              <div class="card-title">Display 1</div>
+              <div class="card-sub">Primary Monitor</div>
+            </div>
+          </button>
+          <button class="card-btn" id="btn-mon-2" onclick="switchMonitor(2)">
+            <div class="card-icon">📺</div>
+            <div class="card-text">
+              <div class="card-title">Display 2</div>
+              <div class="card-sub">Extended Virtual Screen</div>
+            </div>
+          </button>
+        </div>
+
+        <div class="section-label">Streaming Quality Preset</div>
+        <div class="pill-group">
+          <button class="pill-btn" data-quality="540p" onclick="setQualityPreset('540p')">540p (Smooth / Battery)</button>
+          <button class="pill-btn active" data-quality="720p" onclick="setQualityPreset('720p')">720p (HD Balanced)</button>
+          <button class="pill-btn" data-quality="1080p" onclick="setQualityPreset('1080p')">1080p (Ultra Crisp)</button>
+        </div>
+
+        <div class="section-label">Screen Fit & Aspect Ratio</div>
+        <div class="pill-group">
+          <button class="pill-btn active" id="fit-contain-btn" onclick="setFitMode('contain')">Letterbox (Contain)</button>
+          <button class="pill-btn" id="fit-fill-btn" onclick="setFitMode('fill')">Stretch to Fill</button>
+        </div>
+
+        <div class="grid-2col mt-3">
+          <button class="btn btn-secondary" id="fullscreen-btn">
+            <svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+            Fullscreen Mode
+          </button>
+          <button class="btn btn-secondary" id="kbd-trigger-btn">
+            <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="8" y1="16" x2="16" y2="16"/></svg>
+            Virtual Keyboard
+          </button>
+        </div>
+      </div>
+
+      <!-- TAB 2: Virtual Trackpad -->
+      <div class="tab-pane" id="tab-trackpad">
+        <div class="trackpad-box" id="virtual-trackpad">
+          <div class="trackpad-hint">Touchpad Surface & Gestures</div>
+          <div class="trackpad-crosshair"></div>
+        </div>
+
+        <!-- Dedicated Mouse Buttons -->
+        <div class="mouse-buttons-row">
+          <button class="mouse-btn mouse-btn-main" id="btn-left-click">
+            <span>Left Click</span>
+          </button>
+          <button class="mouse-btn" id="btn-mid-click">
+            <span>Middle</span>
+          </button>
+          <button class="mouse-btn mouse-btn-main" id="btn-right-click">
+            <span>Right Click</span>
+          </button>
+        </div>
+
+        <div class="slider-row">
+          <span class="slider-label">Trackpad Speed</span>
+          <input type="range" id="sensitivity-slider" min="0.5" max="3.0" step="0.1" value="1.5">
+          <span id="sensitivity-val" class="slider-val">1.5x</span>
+        </div>
+      </div>
+
+      <!-- TAB 3: Windows Power Shortcuts -->
+      <div class="tab-pane" id="tab-shortcuts">
+        <div class="section-label">Windows System Hotkeys</div>
+        <div class="shortcuts-grid">
+          <button class="key-card" onclick="sendHotkey(['Win'])">
+            <span class="key-badge">Win</span>
+            <span>Start Menu</span>
+          </button>
+          <button class="key-card" onclick="sendHotkey(['Win', 'd'])">
+            <span class="key-badge">Win + D</span>
+            <span>Show Desktop</span>
+          </button>
+          <button class="key-card" onclick="sendHotkey(['Alt', 'Tab'])">
+            <span class="key-badge">Alt + Tab</span>
+            <span>Switch Apps</span>
+          </button>
+          <button class="key-card" onclick="sendHotkey(['Ctrl', 'Shift', 'Escape'])">
+            <span class="key-badge">Ctrl+Shift+Esc</span>
+            <span>Task Manager</span>
+          </button>
+          <button class="key-card" onclick="sendHotkey(['Win', 'p'])">
+            <span class="key-badge">Win + P</span>
+            <span>Project Screen</span>
+          </button>
+          <button class="key-card" onclick="sendHotkey(['Ctrl', 'c'])">
+            <span class="key-badge">Ctrl + C</span>
+            <span>Copy</span>
+          </button>
+          <button class="key-card" onclick="sendHotkey(['Ctrl', 'v'])">
+            <span class="key-badge">Ctrl + V</span>
+            <span>Paste</span>
+          </button>
+          <button class="key-card" onclick="sendHotkey(['Ctrl', 'z'])">
+            <span class="key-badge">Ctrl + Z</span>
+            <span>Undo</span>
+          </button>
+          <button class="key-card" onclick="sendHotkey(['Ctrl', 'a'])">
+            <span class="key-badge">Ctrl + A</span>
+            <span>Select All</span>
+          </button>
+        </div>
+
+        <div class="section-label mt-3">Quick Navigation Keys</div>
+        <div class="nav-keys-row">
+          <button class="key-btn" onclick="sendKey('Escape')">ESC</button>
+          <button class="key-btn" onclick="sendKey('Tab')">TAB</button>
+          <button class="key-btn" onclick="sendKey('Backspace')">DEL</button>
+          <button class="key-btn key-btn-accent" onclick="sendKey('Enter')">ENTER</button>
+        </div>
+
+        <div class="arrow-pad">
+          <div></div>
+          <button class="arrow-btn" onclick="sendKey('ArrowUp')">▲</button>
+          <div></div>
+          <button class="arrow-btn" onclick="sendKey('ArrowLeft')">◀</button>
+          <button class="arrow-btn" onclick="sendKey('ArrowDown')">▼</button>
+          <button class="arrow-btn" onclick="sendKey('ArrowRight')">▶</button>
+        </div>
+      </div>
+
+      <!-- TAB 4: Media & Audio Controls -->
+      <div class="tab-pane" id="tab-media">
+        <div class="section-label">Windows Media & Audio Controls</div>
+        <div class="media-controls-grid">
+          <button class="media-btn" onclick="sendKey('VolumeDown')">
+            <svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="15.54" y1="8.46" x2="15.54" y2="15.54"/></svg>
+            <span>Volume -</span>
+          </button>
+          <button class="media-btn" onclick="sendKey('VolumeMute')">
+            <svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+            <span>Mute</span>
+          </button>
+          <button class="media-btn" onclick="sendKey('VolumeUp')">
+            <svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+            <span>Volume +</span>
+          </button>
+        </div>
+
+        <div class="media-playback-row mt-3">
+          <button class="playback-btn" onclick="sendKey('MediaPrev')">⏮ Prev</button>
+          <button class="playback-btn playback-btn-primary" onclick="sendKey('MediaPlayPause')">⏯ Play / Pause</button>
+          <button class="playback-btn" onclick="sendKey('MediaNext')">⏭ Next</button>
+        </div>
+      </div>
+
+      <!-- TAB 5: Gesture Guide -->
+      <div class="tab-pane" id="tab-gestures">
+        <div class="guide-cards">
+          <div class="guide-card">
+            <div class="guide-icon">👆</div>
+            <div class="guide-info">
+              <div class="guide-title">Single Tap</div>
+              <div class="guide-desc">Performs a standard Windows Left Click at cursor.</div>
+            </div>
+          </div>
+          <div class="guide-card">
+            <div class="guide-icon">✌️</div>
+            <div class="guide-info">
+              <div class="guide-title">Two-Finger Tap</div>
+              <div class="guide-desc">Triggers Windows Right Click (Context Menu).</div>
+            </div>
+          </div>
+          <div class="guide-card">
+            <div class="guide-icon">📜</div>
+            <div class="guide-info">
+              <div class="guide-title">Two-Finger Drag</div>
+              <div class="guide-desc">Smooth vertical and horizontal page scrolling.</div>
+            </div>
+          </div>
+          <div class="guide-card">
+            <div class="guide-icon">🤏</div>
+            <div class="guide-info">
+              <div class="guide-title">Pinch to Zoom</div>
+              <div class="guide-desc">Zoom in up to 3x on code or text, then drag to pan.</div>
+            </div>
+          </div>
+          <div class="guide-card">
+            <div class="guide-icon">⏱️</div>
+            <div class="guide-info">
+              <div class="guide-title">Tap & Hold</div>
+              <div class="guide-desc">Holds mouse down for dragging windows or selections.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
 
   <!-- Hidden text input for triggering mobile virtual keyboard -->
   <input type="text" id="hidden-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
 
-  <!-- Modular Scripts with cache-busting -->
-  <script src="/static/js/connection.js?v=2.3"></script>
-  <script src="/static/js/renderer.js?v=2.3"></script>
-  <script src="/static/js/controls.js?v=2.3"></script>
-  <script src="/static/js/app.js?v=2.3"></script>
+  <!-- Modular Scripts -->
+  <script src="/static/js/connection.js?v=3.0"></script>
+  <script src="/static/js/renderer.js?v=3.0"></script>
+  <script src="/static/js/controls.js?v=3.0"></script>
+  <script src="/static/js/app.js?v=3.0"></script>
+
+  <!-- PWA Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/static/sw.js').catch(() => {});
+      });
+    }
+  </script>
 </body>
 </html>

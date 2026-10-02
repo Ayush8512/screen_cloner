@@ -1,0 +1,23 @@
+{
+  "name": "AirScreen Wireless Display",
+  "short_name": "AirScreen",
+  "description": "Ultra-Low Latency Wireless Second Display and Screen Cloner",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#090d16",
+  "theme_color": "#090d16",
+  "icons": [
+    {
+      "src": "/static/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/qr.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}

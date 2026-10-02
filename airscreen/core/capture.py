@@ -68,6 +68,56 @@ class ScreenCaptureEngine:
             mon = self.display_manager.get_monitors()[0]
         return mon
 
+    def generate_thumbnail(self, monitor_id: int, max_width: int = 320) -> Optional[bytes]:
+        """Captures a quick scaled JPEG snapshot of a specific monitor for preview."""
+        try:
+            # Attach calling thread to interactive desktop session
+            h_desk = user32.OpenInputDesktop(0, False, 0x01FF)
+            if h_desk:
+                user32.SetThreadDesktop(h_desk)
+
+            sct = mss.MSS()
+            target_idx = max(1, min(monitor_id, len(sct.monitors) - 1))
+            sct_mon = sct.monitors[target_idx]
+            sct_img = sct.grab(sct_mon)
+            raw_bytes = np.frombuffer(sct_img.raw, dtype=np.uint8).reshape((sct_img.height, sct_img.width, 4))
+            bgr = cv2.cvtColor(raw_bytes, cv2.COLOR_BGRA2BGR)
+
+            h, w = bgr.shape[:2]
+            scale = max_width / float(w)
+            new_w = max_width
+            new_h = max(10, int(h * scale))
+            resized = cv2.resize(bgr, (new_w, new_h), interpolation=cv2.INTER_AREA)
+            success, encoded = cv2.imencode(".jpg", resized, [cv2.IMWRITE_JPEG_QUALITY, 70])
+            if success:
+                return encoded.tobytes()
+        except Exception as e:
+            logger.debug(f"[Capture] Thumbnail grab error: {e}")
+
+        # If live capture was unavailable, generate a dark slate placeholder frame
+        try:
+            placeholder = np.zeros((180, 320, 3), dtype=np.uint8)
+            placeholder[:] = (26, 17, 9)  # Dark slate BGR
+            cv2.putText(
+                placeholder,
+                f"Display {monitor_id}",
+                (80, 95),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.8,
+                (248, 189, 56),  # Cyan
+                2,
+                cv2.LINE_AA,
+            )
+            success, encoded = cv2.imencode(".jpg", placeholder, [cv2.IMWRITE_JPEG_QUALITY, 80])
+            if success:
+                return encoded.tobytes()
+        except Exception:
+            pass
+
+        return None
+
+
+
     def start(self):
         if self._running:
             return
