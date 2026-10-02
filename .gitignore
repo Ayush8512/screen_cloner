@@ -13,3 +13,9 @@ current_screen_mss.jpg
 *.log
 Thumbs.db
 Desktop.ini
+
+# PyInstaller build artifacts
+build/
+dist/
+*.spec
+
