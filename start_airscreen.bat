@@ -2,6 +2,11 @@
 title AirScreen - Modular Wireless Display & Control Center
 cd /d "%~dp0"
 
+if exist "%~dp0AirScreen.exe" (
+    start "" "%~dp0AirScreen.exe"
+    exit /b
+)
+
 echo ================================================================
 echo   AIRSCREEN :: WIRELESS DISPLAY & VIRTUAL MONITOR SUITE
 echo ================================================================

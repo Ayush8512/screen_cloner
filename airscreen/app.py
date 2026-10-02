@@ -63,16 +63,23 @@ def create_app(config: AppConfig, static_dir: str) -> FastAPI:
 
     @app.get("/api/system/stats")
     async def get_system_stats():
+        from airscreen.config import get_resource_path
         from airscreen.network.discovery import NetworkDiscovery
         import subprocess
 
-        # Check driver running status
+        # Check driver running status silently without opening terminal windows
         driver_active = False
         try:
-            base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            devcon_path = os.path.join(base_dir, "virtual_display_driver", "Dependencies", "devcon.exe")
+            devcon_path = get_resource_path("virtual_display_driver", "Dependencies", "devcon.exe")
             if os.path.exists(devcon_path):
-                res = subprocess.run([devcon_path, "status", "Root\\MttVDD"], capture_output=True, text=True, timeout=2)
+                flags = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
+                res = subprocess.run(
+                    [devcon_path, "status", "Root\\MttVDD"],
+                    capture_output=True,
+                    text=True,
+                    timeout=2,
+                    creationflags=flags,
+                )
                 driver_active = "Driver is running" in res.stdout
         except Exception:
             driver_active = False
@@ -96,6 +103,22 @@ def create_app(config: AppConfig, static_dir: str) -> FastAPI:
             "interfaces": interfaces,
         })
 
+    @app.get("/api/qr")
+    async def get_qr_image(ip: str = ""):
+        """Dynamically render QR code in-memory without disk write dependencies."""
+        from airscreen.network.discovery import NetworkDiscovery
+        import qrcode
+        import io
+        from fastapi import Response
+
+        target_ip = ip if ip else NetworkDiscovery.get_local_wifi_ip()
+        url = f"http://{target_ip}:{config.port}"
+        
+        img = qrcode.make(url)
+        buf = io.BytesIO()
+        img.save(buf, format="PNG")
+        return Response(content=buf.getvalue(), media_type="image/png")
+
     @app.get("/api/system/thumbnail/{monitor_id}")
     async def get_monitor_thumbnail(monitor_id: int):
         from fastapi import Response
@@ -116,19 +139,37 @@ def create_app(config: AppConfig, static_dir: str) -> FastAPI:
 
     @app.post("/api/driver/action")
     async def api_driver_action(payload: dict):
+        from airscreen.config import get_resource_path
+        import subprocess
+
         action = payload.get("action")
-        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        flags = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
         
         if action == "install":
-            bat_path = os.path.join(base_dir, "install_driver_admin.bat")
-            os.system(f'start "" powershell -Command "Start-Process \'{bat_path}\' -Verb RunAs"')
-            return JSONResponse({"success": True, "message": "Triggered driver installation"})
+            bat_path = get_resource_path("install_driver_admin.bat")
+            if os.path.exists(bat_path):
+                subprocess.Popen(
+                    ["powershell", "-NoProfile", "-NonInteractive", "-Command", f"Start-Process '{bat_path}' -Verb RunAs"],
+                    creationflags=flags,
+                )
+                return JSONResponse({"success": True, "message": "Triggered driver installation"})
+            return JSONResponse({"success": False, "message": "Driver install script not found"}, status_code=404)
+
         elif action == "remove":
-            bat_path = os.path.join(base_dir, "uninstall_driver_admin.bat")
-            os.system(f'start "" powershell -Command "Start-Process \'{bat_path}\' -Verb RunAs"')
-            return JSONResponse({"success": True, "message": "Triggered driver removal"})
+            bat_path = get_resource_path("uninstall_driver_admin.bat")
+            if os.path.exists(bat_path):
+                subprocess.Popen(
+                    ["powershell", "-NoProfile", "-NonInteractive", "-Command", f"Start-Process '{bat_path}' -Verb RunAs"],
+                    creationflags=flags,
+                )
+                return JSONResponse({"success": True, "message": "Triggered driver removal"})
+            return JSONResponse({"success": False, "message": "Driver uninstall script not found"}, status_code=404)
+
         elif action == "settings":
-            os.system('start ms-settings:display')
+            subprocess.Popen(
+                ["powershell", "-NoProfile", "-NonInteractive", "-Command", "Start-Process 'ms-settings:display'"],
+                creationflags=flags,
+            )
             return JSONResponse({"success": True, "message": "Opened Windows Display Settings"})
 
         return JSONResponse({"success": False, "message": "Unknown action"}, status_code=400)

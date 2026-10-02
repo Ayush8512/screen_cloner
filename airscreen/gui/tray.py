@@ -38,16 +38,31 @@ class SystemTrayManager:
         webbrowser.open(f"http://127.0.0.1:{self.port}/dashboard")
 
     def _copy_link(self, icon, item):
+        import sys
         from airscreen.network.discovery import NetworkDiscovery
         ip = NetworkDiscovery.get_local_wifi_ip()
         url = f"http://{ip}:{self.port}"
         try:
-            subprocess.run(["powershell", "-Command", f"Set-Clipboard -Value '{url}'"], check=False)
+            flags = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
+            subprocess.run(
+                ["powershell", "-NoProfile", "-NonInteractive", "-Command", f"Set-Clipboard -Value '{url}'"],
+                creationflags=flags,
+                check=False,
+            )
         except Exception:
             pass
 
     def _toggle_display_mode(self, icon, item):
-        subprocess.run(["powershell", "-Command", "Start-Process 'ms-settings:display'"], check=False)
+        import sys
+        try:
+            flags = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
+            subprocess.run(
+                ["powershell", "-NoProfile", "-NonInteractive", "-Command", "Start-Process 'ms-settings:display'"],
+                creationflags=flags,
+                check=False,
+            )
+        except Exception:
+            pass
 
     def _quit(self, icon, item):
         icon.stop()

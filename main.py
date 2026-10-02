@@ -1,33 +1,40 @@
 """AirScreen Command-Line Interface and Server Entry Point."""
 
 import argparse
+import ctypes
 import logging
+import multiprocessing
 import os
 import sys
 import threading
 import time
+import webbrowser
 
 import uvicorn
 
-from airscreen.config import AppConfig
+from airscreen.config import AppConfig, get_resource_path
 from airscreen.network.discovery import NetworkDiscovery
 from airscreen.app import create_app
 from airscreen.gui.window import HostWindow
 from airscreen.gui.tray import SystemTrayManager
 
-# Configure structured monochromatic logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    datefmt="%H:%M:%S",
-)
+# Configure structured monochromatic logging with optional file fallback for frozen exe
+log_format = "%(asctime)s [%(levelname)s] %(message)s"
+logging.basicConfig(level=logging.INFO, format=log_format, datefmt="%H:%M:%S")
 logger = logging.getLogger("airscreen")
 
-# Force UTF-8 on Windows stdout for clean terminal borders
-try:
-    sys.stdout.reconfigure(encoding="utf-8")
-except Exception:
-    pass
+# Safely handle frozen / windowed stdout
+if sys.stdout is None:
+    class DummyStream:
+        def write(self, s): pass
+        def flush(self): pass
+    sys.stdout = DummyStream()
+    sys.stderr = DummyStream()
+else:
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
 
 
 def parse_args() -> argparse.Namespace:
@@ -46,9 +53,8 @@ def parse_args() -> argparse.Namespace:
 def main():
     args = parse_args()
 
-    # Resolve static assets folder
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    static_dir = os.path.join(base_dir, "static")
+    # Resolve static assets folder across dev and frozen PyInstaller environments
+    static_dir = get_resource_path("static")
 
     # Discover network configuration
     wifi_ip = NetworkDiscovery.get_local_wifi_ip()
@@ -95,14 +101,30 @@ def main():
         # Allow server 500ms to bind port
         time.sleep(0.5)
 
+        # Lifecycle event to coordinate exit from tray or keyboard interrupt
+        exit_event = threading.Event()
+
+        def signal_exit():
+            logger.info("[AirScreen] Exit signal received. Terminating process...")
+            exit_event.set()
+
         # Initialize System Tray
-        tray = SystemTrayManager(port=config.port, on_exit=lambda: os._exit(0))
+        tray = SystemTrayManager(port=config.port, on_exit=signal_exit)
         tray.run_in_thread()
 
-        # Launch Native Desktop Window
+        # Launch Native Desktop Window with graceful fallback to browser
         try:
             window = HostWindow(port=config.port)
             window.start()
+            logger.info("[AirScreen] Control Center window closed. Service remains active in system tray.")
+        except Exception as e:
+            logger.warning(f"[GUI] Native window unavailable ({e}). Opening dashboard in system browser...")
+            webbrowser.open(f"http://127.0.0.1:{config.port}/dashboard")
+
+        # Keep server and system tray alive until user explicitly exits via tray
+        try:
+            while not exit_event.is_set():
+                time.sleep(0.5)
         except KeyboardInterrupt:
             pass
         finally:
@@ -111,4 +133,16 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # Crucial on Windows for PyInstaller frozen binary execution
+    multiprocessing.freeze_support()
+    try:
+        main()
+    except Exception as exc:
+        if sys.platform == "win32" and getattr(sys, "frozen", False):
+            ctypes.windll.user32.MessageBoxW(
+                0,
+                f"AirScreen encountered an error and could not start:\n\n{exc}",
+                "AirScreen Fatal Error",
+                0x10,
+            )
+        raise

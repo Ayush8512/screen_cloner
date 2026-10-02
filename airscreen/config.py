@@ -1,7 +1,32 @@
-"""Configuration models and application presets for AirScreen."""
-
+import os
+import sys
 from dataclasses import dataclass, field
 from typing import Dict, Tuple
+
+
+def get_base_dir() -> str:
+    """Returns the base project root or PyInstaller extract/bundle directory."""
+    if getattr(sys, "frozen", False):
+        return getattr(sys, "_MEIPASS", os.path.dirname(sys.executable))
+    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def get_resource_path(*subpaths: str) -> str:
+    """Resolve absolute path to a bundled resource file or directory across dev and PyInstaller environments."""
+    if getattr(sys, "frozen", False):
+        bundle_dir = getattr(sys, "_MEIPASS", "")
+        if bundle_dir:
+            p = os.path.join(bundle_dir, *subpaths)
+            if os.path.exists(p):
+                return p
+        exe_dir = os.path.dirname(sys.executable)
+        p = os.path.join(exe_dir, *subpaths)
+        if os.path.exists(p):
+            return p
+        return os.path.join(bundle_dir or exe_dir, *subpaths)
+    else:
+        root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        return os.path.join(root_dir, *subpaths)
 
 
 @dataclass(frozen=True)

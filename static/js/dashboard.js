@@ -78,8 +78,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const fullUrl = `http://${selectedIp}:${currentPort}`;
     connectionUrl.textContent = fullUrl;
 
-    // Refresh QR code
-    qrImg.src = `/static/qr.png?v=${Date.now()}`;
+    // Refresh QR code dynamically for the selected IP
+    qrImg.src = `/api/qr?ip=${encodeURIComponent(selectedIp)}&v=${Date.now()}`;
+    qrImg.onerror = () => { qrImg.src = `/static/qr.png?v=${Date.now()}`; };
   }
 
   ifaceSelect.addEventListener("change", () => {
